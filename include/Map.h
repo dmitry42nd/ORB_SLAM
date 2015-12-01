@@ -47,12 +47,14 @@ public:
     void SetCurrentCameraPose(cv::Mat Tcw);
     void SetReferenceKeyFrames(const std::vector<KeyFrame*> &vpKFs);
     void SetReferenceMapPoints(const std::vector<MapPoint*> &vpMPs);
+    void SetActiveMapPoints(const std::vector<MapPoint*> &vpMPs);
 
     std::vector<KeyFrame*> GetAllKeyFrames();
     std::vector<MapPoint*> GetAllMapPoints();
     cv::Mat GetCameraPose();
     std::vector<KeyFrame*> GetReferenceKeyFrames();
     std::vector<MapPoint*> GetReferenceMapPoints();
+    std::vector<MapPoint*> GetActiveMapPoints();
 
     int MapPointsInMap();
     int KeyFramesInMap();
@@ -70,6 +72,7 @@ protected:
     std::set<KeyFrame*> mspKeyFrames;
 
     std::vector<MapPoint*> mvpReferenceMapPoints;
+    std::vector<MapPoint*> mvpActiveMapPoints;
 
     unsigned int mnMaxKFid;
 

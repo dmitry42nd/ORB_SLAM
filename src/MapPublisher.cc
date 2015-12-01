@@ -34,7 +34,7 @@ MapPublisher::MapPublisher(Map* pMap):mpMap(pMap), mbCameraUpdated(false)
     const char* GRAPH_NAMESPACE = "Graph";
     const char* CAMERA_NAMESPACE = "Camera";
 
-    //Configure MapPoints
+    //Configure MapPoints //me3:
     fPointSize=0.01;
     mPoints.header.frame_id = MAP_FRAME_ID;
     mPoints.ns = POINTS_NAMESPACE;
@@ -45,6 +45,20 @@ MapPublisher::MapPublisher(Map* pMap):mpMap(pMap), mbCameraUpdated(false)
     mPoints.pose.orientation.w=1.0;
     mPoints.action=visualization_msgs::Marker::ADD;
     mPoints.color.a = 1.0;
+
+    //
+    mActivePoints.header.frame_id = MAP_FRAME_ID;
+    mActivePoints.ns = POINTS_NAMESPACE;
+    mActivePoints.id=7;
+    mActivePoints.type = visualization_msgs::Marker::POINTS;
+    mActivePoints.scale.x=fPointSize;
+    mActivePoints.scale.y=fPointSize;
+    mActivePoints.pose.orientation.w=1.0;
+    mActivePoints.action=visualization_msgs::Marker::ADD;
+    mActivePoints.color.a = 1.0;
+    mActivePoints.color.b = 1.0;
+    
+
 
     //Configure KeyFrames
     fCameraSize=0.04;
@@ -111,6 +125,7 @@ MapPublisher::MapPublisher(Map* pMap):mpMap(pMap), mbCameraUpdated(false)
 
     publisher.publish(mPoints);
     publisher.publish(mReferencePoints);
+    publisher.publish(mActivePoints);
     publisher.publish(mCovisibilityGraph);
     publisher.publish(mKeyFrames);
     publisher.publish(mCurrentCamera);
@@ -129,24 +144,29 @@ void MapPublisher::Refresh()
         vector<KeyFrame*> vKeyFrames = mpMap->GetAllKeyFrames();
         vector<MapPoint*> vMapPoints = mpMap->GetAllMapPoints();
         vector<MapPoint*> vRefMapPoints = mpMap->GetReferenceMapPoints();
+        vector<MapPoint*> vActMapPoints = mpMap->GetActiveMapPoints();
 
-        PublishMapPoints(vMapPoints, vRefMapPoints);   
+        PublishMapPoints(vMapPoints, vRefMapPoints, vActMapPoints);
+        //PublishMapPoints(vMapPoints, vRefMapPoints);
         PublishKeyFrames(vKeyFrames);
 
         mpMap->ResetUpdated();
     }    
 }
 
-void MapPublisher::PublishMapPoints(const vector<MapPoint*> &vpMPs, const vector<MapPoint*> &vpRefMPs)
+void MapPublisher::PublishMapPoints(const vector<MapPoint*> &vpMPs, const vector<MapPoint*> &vpRefMPs, const vector<MapPoint*> &vpActMPs)
+//void MapPublisher::PublishMapPoints(const vector<MapPoint*> &vpMPs, const vector<MapPoint*> &vpRefMPs)
 {
     mPoints.points.clear();
     mReferencePoints.points.clear();
+    mActivePoints.points.clear();
 
     set<MapPoint*> spRefMPs(vpRefMPs.begin(), vpRefMPs.end());
+    set<MapPoint*> spActMPs(vpActMPs.begin(), vpActMPs.end());
 
     for(size_t i=0, iend=vpMPs.size(); i<iend;i++)
     {
-        if(vpMPs[i]->isBad() || spRefMPs.count(vpMPs[i]))
+        if(vpMPs[i]->isBad() || spRefMPs.count(vpMPs[i]) || spActMPs.count(vpMPs[i]))
             continue;
         geometry_msgs::Point p;
         cv::Mat pos = vpMPs[i]->GetWorldPos();
@@ -154,12 +174,12 @@ void MapPublisher::PublishMapPoints(const vector<MapPoint*> &vpMPs, const vector
         p.y=pos.at<float>(1);
         p.z=pos.at<float>(2);
 
-        mPoints.points.push_back(p);
+        mPoints.points.push_back(p); //me2: black points
     }
 
     for(set<MapPoint*>::iterator sit=spRefMPs.begin(), send=spRefMPs.end(); sit!=send; sit++)
     {
-        if((*sit)->isBad())
+        if((*sit)->isBad() || spActMPs.count(*sit))
             continue;
         geometry_msgs::Point p;
         cv::Mat pos = (*sit)->GetWorldPos();
@@ -167,13 +187,28 @@ void MapPublisher::PublishMapPoints(const vector<MapPoint*> &vpMPs, const vector
         p.y=pos.at<float>(1);
         p.z=pos.at<float>(2);
 
-        mReferencePoints.points.push_back(p);
+        mReferencePoints.points.push_back(p); //me2: red points
+    }
+
+    for(set<MapPoint*>::iterator sit=spActMPs.begin(), send=spActMPs.end(); sit!=send; sit++)
+    {
+        if(!(*sit) || (*sit)->isBad())
+            continue;
+        geometry_msgs::Point p;
+        cv::Mat pos = (*sit)->GetWorldPos();
+        p.x=pos.at<float>(0);
+        p.y=pos.at<float>(1);
+        p.z=pos.at<float>(2);
+
+        mActivePoints.points.push_back(p); //me2: yellow points
     }
 
     mPoints.header.stamp = ros::Time::now();
     mReferencePoints.header.stamp = ros::Time::now();
+    mActivePoints.header.stamp = ros::Time::now();
     publisher.publish(mPoints);
     publisher.publish(mReferencePoints);
+    publisher.publish(mActivePoints);
 }
 
 void MapPublisher::PublishKeyFrames(const vector<KeyFrame*> &vpKFs)

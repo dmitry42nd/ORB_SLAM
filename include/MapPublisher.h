@@ -39,7 +39,8 @@ public:
     Map* mpMap;
 
     void Refresh();
-    void PublishMapPoints(const std::vector<MapPoint*> &vpMPs, const std::vector<MapPoint*> &vpRefMPs);
+    void PublishMapPoints(const std::vector<MapPoint*> &vpMPs, const std::vector<MapPoint*> &vpRefMPs, const std::vector<MapPoint*> &vpActMPs);
+    //void PublishMapPoints(const std::vector<MapPoint*> &vpMPs, const std::vector<MapPoint*> &vpRefMPs);
     void PublishKeyFrames(const std::vector<KeyFrame*> &vpKFs);
     void PublishCurrentCamera(const cv::Mat &Tcw);
     void SetCurrentCameraPose(const cv::Mat &Tcw);
@@ -55,6 +56,7 @@ private:
 
     visualization_msgs::Marker mPoints;
     visualization_msgs::Marker mReferencePoints;
+    visualization_msgs::Marker mActivePoints;
     visualization_msgs::Marker mKeyFrames;
     visualization_msgs::Marker mReferenceKeyFrames;
     visualization_msgs::Marker mCovisibilityGraph;

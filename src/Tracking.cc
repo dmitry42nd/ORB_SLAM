@@ -406,7 +406,8 @@ void Tracking::CreateInitialMap(cv::Mat &Rcw, cv::Mat &tcw)
 
         //Create MapPoint.
         cv::Mat worldPos(mvIniP3D[i]);
-
+        //printf("map points: %1.2f 1.2f 1.2f\n", mvIniP3D[i].x, mvIniP3D[i], mvIniP3D[i].z);
+      
         MapPoint* pMP = new MapPoint(worldPos,pKFcur,mpMap);
 
         pKFini->AddMapPoint(pMP,i);
@@ -670,6 +671,7 @@ void Tracking::CreateNewKeyFrame()
 
     mnLastKeyFrameId = mCurrentFrame.mnId;
     mpLastKeyFrame = pKF;
+    //fprintf(stderr, "New keyframe created\n");
 }
 
 void Tracking::SearchReferencePointsInFrustum()
@@ -729,6 +731,7 @@ void Tracking::UpdateReference()
 {    
     // This is for visualization
     mpMap->SetReferenceMapPoints(mvpLocalMapPoints);
+    mpMap->SetActiveMapPoints(mLastFrame.mvpMapPoints);
 
     // Update
     UpdateReferenceKeyFrames();

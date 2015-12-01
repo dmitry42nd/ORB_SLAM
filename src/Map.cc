@@ -66,6 +66,13 @@ void Map::SetReferenceMapPoints(const vector<MapPoint *> &vpMPs)
     mbMapUpdated=true;
 }
 
+void Map::SetActiveMapPoints(const vector<MapPoint *> &vpMPs)
+{
+    boost::mutex::scoped_lock lock(mMutexMap);
+    mvpActiveMapPoints = vpMPs;
+    mbMapUpdated=true;
+}
+
 vector<KeyFrame*> Map::GetAllKeyFrames()
 {
     boost::mutex::scoped_lock lock(mMutexMap);
@@ -94,6 +101,12 @@ vector<MapPoint*> Map::GetReferenceMapPoints()
 {
     boost::mutex::scoped_lock lock(mMutexMap);
     return mvpReferenceMapPoints;
+}
+
+vector<MapPoint*> Map::GetActiveMapPoints()
+{
+    boost::mutex::scoped_lock lock(mMutexMap);
+    return mvpActiveMapPoints;
 }
 
 bool Map::isMapUpdated()
@@ -133,6 +146,7 @@ void Map::clear()
     mspKeyFrames.clear();
     mnMaxKFid = 0;
     mvpReferenceMapPoints.clear();
+    mvpActiveMapPoints.clear();
 }
 
 } //namespace ORB_SLAM
