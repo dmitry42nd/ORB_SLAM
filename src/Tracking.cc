@@ -48,7 +48,6 @@ Tracking::Tracking(ORBVocabulary* pVoc, FramePublisher *pFramePublisher, MapPubl
     mnLastRelocFrameId(0), mbPublisherStopped(false), mbReseting(false), mbForceRelocalisation(false), mbMotionModel(false)
 {
     // Load camera parameters from settings file
-    mcnt = 0;
     cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
     float fx = fSettings["Camera.fx"];
     float fy = fSettings["Camera.fy"];
@@ -160,11 +159,16 @@ void Tracking::SetKeyFrameDatabase(KeyFrameDatabase *pKFDB)
 void Tracking::Run()
 {
   ros::Rate r(30);
-  while (ros::ok())
+  frameCnt = 0;
+  eof = false;
+  cameraPoseFile.open("cameraPose", std::fstream::in | std::fstream::out | std::fstream::trunc);
+    
+  while (!eof)
   {
     GrabImage();
     r.sleep();
   }
+  cameraPoseFile.close();
 }
 
 void Tracking::GrabImage()
@@ -173,9 +177,13 @@ void Tracking::GrabImage()
     cv::Mat im, im0;
 
     char imPath[100];
-    snprintf(imPath, sizeof(imPath), "%s%d%s", "/opt/ros/indigo/share/ORB_SLAM/tmpdata/rgb/", mcnt++,".png");
+    snprintf(imPath, sizeof(imPath), "%s%d%s", "/opt/ros/indigo/share/ORB_SLAM/tmpdata/rgb/", frameCnt,".png");
     im0 = cv::imread(imPath);
 
+    if(!im0.data) {
+      fprintf(stderr, "frames are over\n");
+      eof = true;
+    }
     if(im0.channels()==3)
     {
         if(mbRGB)
@@ -189,44 +197,10 @@ void Tracking::GrabImage()
     }
 
     if(mState==WORKING || mState==LOST)
-        mCurrentFrame = Frame(im,mcnt,mpORBextractor,mpORBVocabulary,mK,mDistCoef);
+        mCurrentFrame = Frame(im,frameCnt,mpORBextractor,mpORBVocabulary,mK,mDistCoef);
     else
-        mCurrentFrame = Frame(im,mcnt,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef);
+        mCurrentFrame = Frame(im,frameCnt,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef);
     
-#if 0
-    // Copy the ros image message to cv::Mat. Convert to grayscale if it is a color image.
-    cv_bridge::CvImageConstPtr cv_ptr;
-    try
-    {
-        cv_ptr = cv_bridge::toCvShare(msg);
-    }
-    catch (cv_bridge::Exception& e)
-    {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
-        return;
-    }
-
-    ROS_ASSERT(cv_ptr->image.channels()==3 || cv_ptr->image.channels()==1);
-
-    if(cv_ptr->image.channels()==3)
-    {
-        if(mbRGB)
-            cvtColor(cv_ptr->image, im, CV_RGB2GRAY);
-        else
-            cvtColor(cv_ptr->image, im, CV_BGR2GRAY);
-    }
-    else if(cv_ptr->image.channels()==1)
-    {
-        cv_ptr->image.copyTo(im);
-    }
-
-    if(mState==WORKING || mState==LOST)
-        mCurrentFrame = Frame(im,cv_ptr->header.stamp.toSec(),mpORBextractor,mpORBVocabulary,mK,mDistCoef);
-    else
-        mCurrentFrame = Frame(im,cv_ptr->header.stamp.toSec(),mpIniORBextractor,mpORBVocabulary,mK,mDistCoef);
-#endif
-
-
     // Depending on the state of the Tracker we perform different tasks
 
     if(mState==NO_IMAGES_YET)
@@ -338,7 +312,12 @@ void Tracking::GrabImage()
         tf::Transform tfTcw(M,V);
 
         mTfBr.sendTransform(tf::StampedTransform(tfTcw,ros::Time::now(), "ORB_SLAM/World", "ORB_SLAM/Camera"));
+
+        cameraPoseFile << frameCnt << ": " << Rwc << "; " << twc <<  std::endl;
+        cameraPoseFile.flush();
     }
+
+    frameCnt++;
 
 }
 

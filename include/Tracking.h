@@ -90,7 +90,9 @@ public:
 
 
 protected:
-    int mcnt;
+    std::fstream cameraPoseFile;
+    int  frameCnt;
+    bool eof; //end of frames
     void GrabImage();
 
     void FirstInitialization();
