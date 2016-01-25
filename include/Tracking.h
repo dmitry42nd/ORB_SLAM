@@ -90,7 +90,8 @@ public:
 
 
 protected:
-    void GrabImage(const sensor_msgs::ImageConstPtr& msg);
+    int mcnt;
+    void GrabImage();
 
     void FirstInitialization();
     void Initialize();

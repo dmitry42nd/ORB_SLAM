@@ -48,7 +48,7 @@ Tracking::Tracking(ORBVocabulary* pVoc, FramePublisher *pFramePublisher, MapPubl
     mnLastRelocFrameId(0), mbPublisherStopped(false), mbReseting(false), mbForceRelocalisation(false), mbMotionModel(false)
 {
     // Load camera parameters from settings file
-
+    mcnt = 0;
     cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
     float fx = fSettings["Camera.fx"];
     float fy = fSettings["Camera.fy"];
@@ -159,17 +159,41 @@ void Tracking::SetKeyFrameDatabase(KeyFrameDatabase *pKFDB)
 
 void Tracking::Run()
 {
-    ros::NodeHandle nodeHandler;
-    ros::Subscriber sub = nodeHandler.subscribe("/camera/image_raw", 1, &Tracking::GrabImage, this);
-
-    ros::spin();
+  ros::Rate r(30);
+  while (ros::ok())
+  {
+    GrabImage();
+    r.sleep();
+  }
 }
 
-void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
+void Tracking::GrabImage()
 {
 
-    cv::Mat im;
+    cv::Mat im, im0;
 
+    char imPath[100];
+    snprintf(imPath, sizeof(imPath), "%s%d%s", "/opt/ros/indigo/share/ORB_SLAM/tmpdata/rgb/", mcnt++,".png");
+    im0 = cv::imread(imPath);
+
+    if(im0.channels()==3)
+    {
+        if(mbRGB)
+            cvtColor(im0, im, CV_RGB2GRAY);
+        else
+            cvtColor(im0, im, CV_BGR2GRAY);
+    }
+    else if(im0.channels()==1)
+    {
+        im0.copyTo(im);
+    }
+
+    if(mState==WORKING || mState==LOST)
+        mCurrentFrame = Frame(im,mcnt,mpORBextractor,mpORBVocabulary,mK,mDistCoef);
+    else
+        mCurrentFrame = Frame(im,mcnt,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef);
+    
+#if 0
     // Copy the ros image message to cv::Mat. Convert to grayscale if it is a color image.
     cv_bridge::CvImageConstPtr cv_ptr;
     try
@@ -200,6 +224,8 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
         mCurrentFrame = Frame(im,cv_ptr->header.stamp.toSec(),mpORBextractor,mpORBVocabulary,mK,mDistCoef);
     else
         mCurrentFrame = Frame(im,cv_ptr->header.stamp.toSec(),mpIniORBextractor,mpORBVocabulary,mK,mDistCoef);
+#endif
+
 
     // Depending on the state of the Tracker we perform different tasks
 
