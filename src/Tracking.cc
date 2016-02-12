@@ -108,7 +108,7 @@ Tracking::Tracking(ORBVocabulary* pVoc, FramePublisher *pFramePublisher, MapPubl
     assert(Score==1 || Score==0);
 
     mpORBextractor = new ORBextractor(nFeatures,fScaleFactor,nLevels,Score,fastTh);
-
+  
     cout << endl  << "ORB Extractor Parameters: " << endl;
     cout << "- Number of Features: " << nFeatures << endl;
     cout << "- Scale Levels: " << nLevels << endl;
@@ -159,7 +159,7 @@ void Tracking::SetKeyFrameDatabase(KeyFrameDatabase *pKFDB)
 void Tracking::Run()
 {
   ros::Rate r(30);
-  frameCnt = 0;
+  frameCnt = 1;
   eof = false;
   cameraPoseFile.open("cameraPose", std::fstream::in | std::fstream::out | std::fstream::trunc);
     
@@ -177,11 +177,11 @@ void Tracking::GrabImage()
     cv::Mat im, im0;
 
     char imPath[100];
-    snprintf(imPath, sizeof(imPath), "%s%d%s", "/opt/ros/indigo/share/ORB_SLAM/tmpdata/rgb/", frameCnt,".png");
+    snprintf(imPath, sizeof(imPath), "%s%d%s", "../tmpdata/", frameCnt,".bmp");
     im0 = cv::imread(imPath);
 
     if(!im0.data) {
-      fprintf(stderr, "frames are over\n");
+      fprintf(stderr, "frames are ended\n");
       eof = true;
     }
     if(im0.channels()==3)
