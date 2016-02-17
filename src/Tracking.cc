@@ -200,7 +200,7 @@ void Tracking::GrabImage()
         mCurrentFrame = Frame(im,frameCnt,mpORBextractor,mpORBVocabulary,mK,mDistCoef);
     else
         mCurrentFrame = Frame(im,frameCnt,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef);
-    
+
     // Depending on the state of the Tracker we perform different tasks
 
     if(mState==NO_IMAGES_YET)
@@ -313,7 +313,22 @@ void Tracking::GrabImage()
 
         mTfBr.sendTransform(tf::StampedTransform(tfTcw,ros::Time::now(), "ORB_SLAM/World", "ORB_SLAM/Camera"));
 
-        cameraPoseFile << frameCnt << ": " << Rwc << "; " << twc <<  std::endl;
+        //write out frame number and R, t of camera
+        cameraPoseFile << frameCnt << ":" << endl;
+        cameraPoseFile << Rwc << ";" << endl;
+        cameraPoseFile << twc << ";" << endl;
+
+        //write out frame key points
+        bool first = true;
+        for(vector<cv::KeyPoint>::iterator k = mCurrentFrame.mvKeys.begin(); k != mCurrentFrame.mvKeys.end(); ++k) {
+          if(!first) {
+            cameraPoseFile << std::endl;
+          }
+          first = false;
+          cameraPoseFile << k->pt;
+        }
+        cameraPoseFile << endl;
+        
         cameraPoseFile.flush();
     }
 
