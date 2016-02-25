@@ -60,3 +60,14 @@ ORBextractor.nScoreType: 1
 
 # Constant Velocity Motion Model (0 - disabled, 1 - enabled [recommended])
 UseMotionModel: 1
+
+# Camera pose file path
+CameraPosesFilePath: "../Data/cameraPoses"
+
+# Tracks file path
+TracksFilePath: "../Data/tracks"
+
+# Frames directory path
+FramesDirPath: "../Data/frames/"
+
+

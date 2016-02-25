@@ -25,6 +25,7 @@
 #include<opencv2/features2d/features2d.hpp>
 #include<sensor_msgs/Image.h>
 #include<sensor_msgs/image_encodings.h>
+#include<boost/filesystem.hpp>
 
 #include"FramePublisher.h"
 #include"Map.h"
@@ -90,9 +91,13 @@ public:
 
 
 protected:
-    std::fstream cameraPoseFile;
-    int  frameCnt;
-    bool eof; //end of frames
+    fstream cameraPosesFile;
+    fstream tracksFile;
+
+    vector<boost::filesystem::path> vFramePaths;
+    int  frameId;
+    bool noMoreFrames;
+
     void GrabImage();
 
     void FirstInitialization();
