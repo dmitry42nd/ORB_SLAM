@@ -182,11 +182,11 @@ void Tracking::Run()
     }
 
     mpMap->DumpPointsTracks(tracksFile);
+    tracksFile.close();
+    fprintf(stderr, "Tracks dumped\n");
 
     cameraPosesFile.close();
-    tracksFile.close();
-
-    fprintf(stderr, "Tracks dumped\n");
+    fprintf(stderr, "Camera poses dumped\n");
 }
 
 void Tracking::GrabImage()
@@ -330,10 +330,23 @@ void Tracking::GrabImage()
             mTfBr.sendTransform(tf::StampedTransform(tfTcw,ros::Time::now(), "ORB_SLAM/World", "ORB_SLAM/Camera"));
 
             //write out frame number and R, t of camera
-            cameraPosesFile << "#" << frameId << ":" << endl;
-            cameraPosesFile << Rwc << endl;
-            cameraPosesFile << twc << endl;
-            cameraPosesFile.flush();
+            cameraPosesFile << frameId << " ";
+
+            for(int i=0; i<Rwc.rows; i++)
+            {
+                for(int j=0; j<Rwc.cols; j++)
+                {
+                    cameraPosesFile << Rwc.at<float>(i,j) << " ";
+                }
+            }
+
+            for(int i=0; i<twc.rows; i++)
+            {
+                for(int j=0; j<twc.cols; j++)
+                {
+                    cameraPosesFile << twc.at<float>(i,j) << " ";
+                }
+            }
 
             //update map points traks
             for(size_t i = 0; i < mCurrentFrame.mvpMapPoints.size(); ++i)
