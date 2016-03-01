@@ -40,6 +40,8 @@ class Map
 public:
     Map();
 
+    void DumpPointsTracks(std::fstream& dumpFile);
+
     void AddKeyFrame(KeyFrame* pKF);
     void AddMapPoint(MapPoint* pMP);
     void EraseMapPoint(MapPoint* pMP);

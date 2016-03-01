@@ -29,6 +29,20 @@ Map::Map()
     mnMaxKFid = 0;
 }
 
+void Map::DumpPointsTracks(std::fstream& dumpFile)
+{
+    vector<MapPoint*> mapPoints = GetAllMapPoints();
+    //fprintf(stderr, "total map points: %zu\n", mapPoints.size());
+
+    int pointId = 0;
+    for(vector<MapPoint*>::iterator p = mapPoints.begin(); p != mapPoints.end(); ++p) {
+        //fprintf(stderr, "Point id: %d\n", pointId);
+        dumpFile << pointId << " ";
+        (*p)->GetPointTrack(dumpFile);
+        pointId++;
+    }
+}
+
 void Map::AddKeyFrame(KeyFrame *pKF)
 {
     boost::mutex::scoped_lock lock(mMutexMap);

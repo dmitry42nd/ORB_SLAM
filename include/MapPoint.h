@@ -22,9 +22,9 @@
 #define MAPPOINT_H
 
 #include<opencv2/core/core.hpp>
+#include <opencv2/opencv.hpp>
 #include"KeyFrame.h"
 #include"Map.h"
-
 #include<boost/thread.hpp>
 
 
@@ -35,11 +35,22 @@ class ImageFeature;
 class KeyFrame;
 class Map;
 
+struct TrackedPoint {
+  TrackedPoint(long unsigned int frameId, cv::KeyPoint keyPoint) :
+  frameId(frameId),
+  keyPoint(keyPoint)
+  {};
+
+  long unsigned int frameId;
+  cv::KeyPoint keyPoint;
+};
 
 class MapPoint
 {
 public:
     MapPoint(const cv::Mat &Pos, KeyFrame* pRefKF, Map* pMap);
+
+    void GetPointTrack(std::fstream& dumpFile);
 
     void SetWorldPos(const cv::Mat &Pos);
     cv::Mat GetWorldPos();
@@ -97,8 +108,8 @@ public:
     long unsigned int mnCorrectedByKF;
     long unsigned int mnCorrectedReference;
 
+    std::vector<TrackedPoint> pointTrack;
 protected:    
-
      // Position in absolute coordinates
      cv::Mat mWorldPos;
 

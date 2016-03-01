@@ -38,6 +38,19 @@ MapPoint::MapPoint(const cv::Mat &Pos, KeyFrame *pRefKF, Map* pMap):
     mNormalVector = cv::Mat::zeros(3,1,CV_32F);
 }
 
+void MapPoint::GetPointTrack(std::fstream& dumpFile)
+{
+    //fprintf(stderr, "track length: %d\n", pointTrack.size());
+    dumpFile << pointTrack.size() << " ";
+
+    for(vector<TrackedPoint>::iterator p = pointTrack.begin(); p != pointTrack.end(); ++p)
+    {
+        //fprintf(stderr, "frame id: %lu coords: %1.2f %1.2f\n", p->frameId, p->keyPoint.pt.x, p->keyPoint.pt.y);
+        dumpFile << p->frameId << " " << p->keyPoint.pt.x << " " << p->keyPoint.pt.y << " ";
+    }
+
+}
+
 void MapPoint::SetWorldPos(const cv::Mat &Pos)
 {
     boost::mutex::scoped_lock lock(mMutexPos);

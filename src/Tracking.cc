@@ -148,7 +148,6 @@ Tracking::Tracking(ORBVocabulary* pVoc, FramePublisher *pFramePublisher, MapPubl
     frameId = 0;
     noMoreFrames = false;
 
-    //string strFile = ros::package::getPath("ORB_SLAM")+"/"+"KeyFrameTrajectory.txt";
     //prepare camera poses file
     string sCameraPosesFilePath = fSettings["CameraPosesFilePath"];
     cameraPosesFile.open(sCameraPosesFilePath.c_str(), std::fstream::in | std::fstream::out | std::fstream::trunc);
@@ -182,8 +181,12 @@ void Tracking::Run()
         r.sleep();
     }
 
+    mpMap->DumpPointsTracks(tracksFile);
+
     cameraPosesFile.close();
     tracksFile.close();
+
+    fprintf(stderr, "Tracks dumped\n");
 }
 
 void Tracking::GrabImage()
@@ -332,18 +335,15 @@ void Tracking::GrabImage()
             cameraPosesFile << twc << endl;
             cameraPosesFile.flush();
 
-            //write out frame key points
-            tracksFile << "#" << frameId << ":" << endl;
-            bool first = true;
-            for(vector<cv::KeyPoint>::iterator k = mCurrentFrame.mvKeys.begin(); k != mCurrentFrame.mvKeys.end(); ++k) {
-              if(!first) {
-                tracksFile << std::endl;
-              }
-              first = false;
-              tracksFile << k->pt;
+            //update map points traks
+            for(size_t i = 0; i < mCurrentFrame.mvpMapPoints.size(); ++i)
+            {
+                if(!mCurrentFrame.mvbOutlier[i] && mCurrentFrame.mvpMapPoints[i] != NULL)
+                {
+                    mCurrentFrame.mvpMapPoints[i]->pointTrack.push_back(TrackedPoint(mCurrentFrame.mnId,mCurrentFrame.mvKeysUn[i]));
+                }
             }
-            tracksFile << endl;
-            tracksFile.flush();
+
         }
         frameId++;
     }
@@ -564,7 +564,7 @@ bool Tracking::TrackPreviousFrame()
     else //Last opportunity
         nmatches = matcher.SearchByProjection(mLastFrame,mCurrentFrame,50,vpMapPointMatches);
 
-
+    //me0:
     mCurrentFrame.mvpMapPoints=vpMapPointMatches;
 
     if(nmatches<10)
